@@ -1,5 +1,7 @@
 # plaud
 
+> **Alpha** — Early test version. Building in public, testing on my own recordings.
+
 Unofficial TypeScript toolkit for the [Plaud](https://www.plaud.ai/) API — core library, CLI, and MCP server.
 
 ## Why
