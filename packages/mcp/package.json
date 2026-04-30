@@ -8,6 +8,8 @@
   },
   "dependencies": {
     "@plaud/core": "*",
-    "@modelcontextprotocol/sdk": "^1.0.0"
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "open": "^10.2.0",
+    "zod": "^4.3.0"
   }
 }

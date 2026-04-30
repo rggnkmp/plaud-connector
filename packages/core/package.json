@@ -6,5 +6,8 @@
   "types": "src/index.ts",
   "scripts": {
     "test": "vitest run"
+  },
+  "dependencies": {
+    "open": "^10.2.0"
   }
 }

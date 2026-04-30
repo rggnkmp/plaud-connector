@@ -1,4 +1,4 @@
-import { PlaudConfig, PlaudAuth, PlaudClient } from '@plaud/core';
+import { createPlaudClient } from '../createPlaudClient.js';
 
 export async function transcriptCommand(args: string[]): Promise<void> {
   const id = args[0];
@@ -7,10 +7,7 @@ export async function transcriptCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const config = new PlaudConfig();
-  const creds = config.getCredentials();
-  const auth = new PlaudAuth(config);
-  const client = new PlaudClient(auth, creds?.region ?? 'eu');
+  const client = createPlaudClient();
 
   const detail = await client.getRecording(id);
 

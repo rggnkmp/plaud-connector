@@ -7,6 +7,8 @@ export async function loginCommand(_args: string[]): Promise<void> {
     new Promise(resolve => rl.question(q, resolve));
 
   try {
+    // eslint-disable-next-line no-console
+    console.log('If you use Google-only (no Plaud password), use: npm run login-oauth\n');
     const email = await ask('Plaud email: ');
     const password = await ask('Password: ');
     const regionInput = await ask('Region (us/eu) [eu]: ');

@@ -6,6 +6,7 @@
     "plaud": "./bin/plaud.ts"
   },
   "dependencies": {
-    "@plaud/core": "*"
+    "@plaud/core": "*",
+    "open": "^10.2.0"
   }
 }

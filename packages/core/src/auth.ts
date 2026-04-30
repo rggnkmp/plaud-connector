@@ -1,10 +1,35 @@
 import { PlaudConfig } from './config.js';
+import type { PlaudOAuth } from './oauth/plaud-oauth.js';
 import { BASE_URLS } from './types.js';
 import type { PlaudTokenData } from './types.js';
 
-const TOKEN_REFRESH_BUFFER_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+/** Use JWT until shortly before `expiresAt`, then refresh with password (if present) or ask for `import-token` again. */
+const TOKEN_USE_MARGIN_MS = 60_000; // 1 min before `exp` (avoids false “expired” on clock skew)
 
-export class PlaudAuth {
+/** Abstraction: password (consumer access-token) or OAuth (same org token as @plaud-ai/mcp, browser = Google/SSO on Plaud page). */
+export interface IPlaudAuth {
+  getToken(): Promise<string>;
+}
+
+/**
+ * After `login-oauth` / plaud_oauth_login: reuses the Developer OAuth access token for api.plaud.* (consumer) requests.
+ * Sign in to Plaud in the browser (Google SSO is offered on the Plaud login page) — no stored password.
+ */
+export class PlaudOAuthConsumerAuth implements IPlaudAuth {
+  constructor(private readonly oauth: PlaudOAuth) {}
+
+  async getToken(): Promise<string> {
+    const t = await this.oauth.getAccessToken();
+    if (!t) {
+      throw new Error(
+        'Not authenticated. Run `npm run login-oauth` (or plaud_oauth_login), then complete login in the browser (Google/plaud.ai).',
+      );
+    }
+    return t;
+  }
+}
+
+export class PlaudAuth implements IPlaudAuth {
   private config: PlaudConfig;
 
   constructor(config: PlaudConfig) {
@@ -13,10 +38,22 @@ export class PlaudAuth {
 
   async getToken(): Promise<string> {
     const cached = this.config.getToken();
-    if (cached && !this.isExpiringSoon(cached)) {
-      return cached.accessToken;
+    const creds = this.config.getCredentials();
+    if (cached) {
+      if (Date.now() < cached.expiresAt - TOKEN_USE_MARGIN_MS) {
+        return cached.accessToken;
+      }
+      if (creds) {
+        return this.login();
+      }
+      throw new Error(
+        'Consumer access token expired. In the browser, copy a new Authorization: Bearer from api.plaud.ai, then: plaud import-token app "…".',
+      );
     }
-    return this.login();
+    if (creds) {
+      return this.login();
+    }
+    throw new Error('Not authenticated. Run `plaud login`, `plaud import-token app "…"`, or `npm run login-oauth` (Google SSO).');
   }
 
   async login(): Promise<string> {
@@ -58,10 +95,6 @@ export class PlaudAuth {
 
     this.config.saveToken(tokenData);
     return data.access_token;
-  }
-
-  private isExpiringSoon(token: PlaudTokenData): boolean {
-    return Date.now() + TOKEN_REFRESH_BUFFER_MS > token.expiresAt;
   }
 
   private decodeJwtExpiry(jwt: string): { iat: number; exp: number } {

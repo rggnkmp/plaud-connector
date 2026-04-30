@@ -1,2 +1,6 @@
 node_modules/
 dist/
+# generated per machine (absolute paths to scripts/mcp-stdio.mjs)
+.cursor/
+.env
+data/

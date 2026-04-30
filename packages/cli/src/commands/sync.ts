@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { PlaudConfig, PlaudAuth, PlaudClient } from '@plaud/core';
+import { formatPlaudLocalDateYmd } from '@plaud/core';
+import { createPlaudClient } from '../createPlaudClient.js';
 
 export async function syncCommand(args: string[]): Promise<void> {
   const folder = args[0];
@@ -9,10 +10,7 @@ export async function syncCommand(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const config = new PlaudConfig();
-  const creds = config.getCredentials();
-  const auth = new PlaudAuth(config);
-  const client = new PlaudClient(auth, creds?.region ?? 'eu');
+  const client = createPlaudClient();
 
   fs.mkdirSync(folder, { recursive: true });
 
@@ -21,7 +19,7 @@ export async function syncCommand(args: string[]): Promise<void> {
 
   let synced = 0;
   for (const rec of recordings) {
-    const date = new Date(rec.start_time).toISOString().slice(0, 10);
+    const date = formatPlaudLocalDateYmd(rec.start_time);
     const slug = rec.filename?.replace(/[^a-zA-Z0-9]+/g, '_').slice(0, 50) || rec.id;
     const mdFile = path.join(folder, `${date}_${slug}.md`);
 
