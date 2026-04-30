@@ -724,6 +724,37 @@ export class PlaudClient {
     return this.request(`/ai/transsumm/${fileId}`, { method: 'POST', body });
   }
 
+  async generateNewNote(
+    fileId: string,
+    options: {
+      template_id: string;
+      template_type?: string;
+      tab_name?: string;
+      language?: string;
+      speaker_labeling?: boolean;
+      llm?: string;
+      ppc_status?: number;
+    },
+  ): Promise<Record<string, unknown>> {
+    const language = options.language ?? 'de';
+    const diarization = options.speaker_labeling !== false ? 1 : 0;
+    const llm = options.llm ?? 'auto';
+    const body = {
+      post_id: String(Date.now()),
+      summ_type: options.template_id,
+      summ_type_type: options.template_type ?? 'custom',
+      info: JSON.stringify({
+        language,
+        timezone: new Date().getTimezoneOffset() / -60,
+        diarization,
+        llm,
+      }),
+      ppc_status: options.ppc_status ?? 1,
+      tab_name: options.tab_name ?? 'KRM',
+    };
+    return this.request(`/ai/sum_new_note/${fileId}`, { method: 'POST', body });
+  }
+
   async batchRename(renames: { file_id: string; new_name: string }[]): Promise<
     { file_id: string; new_name: string; success: boolean }[]
   > {

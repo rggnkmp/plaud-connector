@@ -565,6 +565,39 @@ async function main() {
   );
 
   server.registerTool(
+    'plaud_generate_new_note',
+    {
+      description:
+        'Create an additional custom note tab (POST /ai/sum_new_note/:file_id). Use this for KRM/custom templates instead of plaud_generate.',
+      inputSchema: z.object({
+        file_id: z.string(),
+        template_id: z.string(),
+        template_type: z.string().optional().default('custom'),
+        tab_name: z.string().optional().default('KRM'),
+        language: z.string().optional().default('de'),
+        speaker_labeling: z.boolean().optional().default(true),
+        llm: z.string().optional().default('auto'),
+        ppc_status: z.number().int().optional().default(1),
+      }),
+    },
+    async (p) => {
+      const gate = await assertConsumerSession();
+      if (gate) return gate;
+      return textJson(
+        await client.generateNewNote(p.file_id, {
+          template_id: p.template_id,
+          template_type: p.template_type,
+          tab_name: p.tab_name,
+          language: p.language,
+          speaker_labeling: p.speaker_labeling,
+          llm: p.llm,
+          ppc_status: p.ppc_status,
+        }),
+      );
+    },
+  );
+
+  server.registerTool(
     'plaud_name_speakers',
     {
       description: 'Rename speaker labels in stored transcript and sync via PATCH + /ai/update_source_info.',
