@@ -91,7 +91,7 @@ describe('PlaudAuth', () => {
     const emptyConfig = new PlaudConfig(emptyDir);
     const emptyAuth = new PlaudAuth(emptyConfig);
 
-    await expect(emptyAuth.getToken()).rejects.toThrow('No credentials');
+    await expect(emptyAuth.getToken()).rejects.toThrow(/Not authenticated/);
     fs.rmSync(emptyDir, { recursive: true, force: true });
   });
 

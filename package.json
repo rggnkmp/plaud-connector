@@ -22,6 +22,7 @@
     "login-oauth": "tsx packages/cli/bin/plaud.ts login-oauth",
     "import-token": "tsx packages/cli/bin/plaud.ts import-token",
     "used-templates": "tsx packages/cli/bin/plaud.ts used-templates",
+    "get-used-templates": "tsx packages/cli/bin/plaud.ts get-used-templates",
     "setup-cursor": "node scripts/write-cursor-mcp.mjs"
   },
   "devDependencies": {

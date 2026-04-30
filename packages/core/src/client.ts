@@ -2,6 +2,7 @@ import type { IPlaudAuth } from './auth.js';
 import { BASE_URLS } from './types.js';
 import { formatPlaudLocalDateTime } from './plaud-datetime.js';
 import type {
+  PlaudGetUsedTemplatesResult,
   PlaudListUsedTemplatesResult,
   PlaudRecording,
   PlaudRecordingDetail,
@@ -322,6 +323,51 @@ export class PlaudClient {
       details_errors,
       slots,
       templates: this.aggregateUsedTemplateSlots(slots),
+    };
+  }
+
+  /**
+   * Same full scan as {@link listUsedTemplates}, plus optional `search` to narrow rows and resolve **template id** from a human-readable name (substring match).
+   */
+  async getUsedTemplates(options: {
+    scope?: 'live' | 'trash' | 'all';
+    requestDelayMs?: number;
+    /** Case-insensitive substring match on `template_name`, `template_id`, and `template_type`. */
+    search?: string;
+  } = {}): Promise<PlaudGetUsedTemplatesResult> {
+    const base = await this.listUsedTemplates({
+      scope: options.scope,
+      requestDelayMs: options.requestDelayMs,
+    });
+    const raw = options.search?.trim() ?? '';
+    if (!raw) {
+      return {
+        ...base,
+        search: null,
+        matched_templates: base.templates,
+        resolved_template_id: null,
+        resolved: null,
+      };
+    }
+    const q = raw.toLowerCase();
+    const matched = base.templates.filter((t) => {
+      if (t.template_id.toLowerCase().includes(q)) return true;
+      if (t.template_type.toLowerCase().includes(q)) return true;
+      if (t.template_name && t.template_name.toLowerCase().includes(q)) return true;
+      return false;
+    });
+    let resolved: PlaudUsedTemplateRow | null = null;
+    let resolved_template_id: string | null = null;
+    if (matched.length === 1) {
+      resolved = matched[0]!;
+      resolved_template_id = resolved.template_id;
+    }
+    return {
+      ...base,
+      search: raw,
+      matched_templates: matched,
+      resolved_template_id,
+      resolved,
     };
   }
 

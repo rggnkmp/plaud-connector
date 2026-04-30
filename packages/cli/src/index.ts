@@ -6,6 +6,7 @@ import { transcriptCommand } from './commands/transcript.js';
 import { syncCommand } from './commands/sync.js';
 import { importTokenCommand } from './commands/import-token.js';
 import { usedTemplatesCommand } from './commands/used-templates.js';
+import { getUsedTemplatesCommand } from './commands/get-used-templates.js';
 
 const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   login: loginCommand,
@@ -17,6 +18,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   sync: syncCommand,
   'import-token': importTokenCommand,
   'used-templates': usedTemplatesCommand,
+  'get-used-templates': getUsedTemplatesCommand,
 };
 
 export async function run(args: string[]): Promise<void> {
@@ -51,6 +53,7 @@ Commands:
   import-token <app|dev> <jwt>  Save token from browser Network (app=api.plaud consumer; dev=platform) — when OAuth page errors
   list                  List recordings
   used-templates        Aggregate used KI summary templates (from file detail); --all, --trash, --json
+  get-used-templates    Same scan + optional --search / -s <substr> for name→template_id resolution; --all, --trash, --json
   download <id> [dir]   Download audio file
   transcript <id>       Print transcript
   sync <folder>         Download all new recordings to folder`);

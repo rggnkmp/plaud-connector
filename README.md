@@ -5,7 +5,7 @@
 
 **Alpha.** Unofficial TypeScript toolkit for the [Plaud](https://www.plaud.ai/) cloud: **`@plaud/core`** (library), **`@plaud/cli`** (terminal client), **`@plaud/mcp`** ([Model Context Protocol](https://modelcontextprotocol.io/) server for Cursor, Claude Desktop, and other MCP hosts).
 
-**What it is for:** programmatic access to *your* Plaud recordings—list and search meetings, pull **raw or polished** transcripts and AI summaries, download **MP3** (or temporary signed URLs), **sync** new files to a local folder, **rename / move / trash** items, trigger **AI re-generation**, build **public share** links, and expose the same capabilities to an LLM via **31 MCP tools**. Consumer traffic targets **`api.plaud.*`**; developer traffic targets **`platform.plaud.ai`** (OAuth, compatible token layout with Plaud’s [`@plaud-ai/mcp`](https://www.npmjs.com/package/@plaud-ai/mcp) npm package).
+**What it is for:** programmatic access to *your* Plaud recordings—list and search meetings, pull **raw or polished** transcripts and AI summaries, download **MP3** (or temporary signed URLs), **sync** new files to a local folder, **rename / move / trash** items, trigger **AI re-generation**, build **public share** links, and expose the same capabilities to an LLM via **32 MCP tools**. Consumer traffic targets **`api.plaud.*`**; developer traffic targets **`platform.plaud.ai`** (OAuth, compatible token layout with Plaud’s [`@plaud-ai/mcp`](https://www.npmjs.com/package/@plaud-ai/mcp) npm package).
 
 **Disclaimer:** not affiliated with Plaud; behaviour is reverse-engineered from the web app. Use at your own risk.
 
@@ -50,6 +50,7 @@ Low-level HTTP helpers live on **`PlaudClient`** / **`PlaudDeveloperClient`** in
 | **Stuck OAuth page, have Network tab** | `import-token app …` for consumer JWT; `import-token dev …` for platform JWT if available. |
 | **Bulk rename after import** | MCP `plaud_batch_rename` with `{ renames: [{ file_id, new_name }, …] }`. |
 | **Report which AI templates you actually used** | CLI `used-templates --json`; MCP `plaud_list_used_templates` (`live` / `trash` / `all`). |
+| **Resolve template name → `template_id` for `plaud_generate`** | CLI `get-used-templates --search "…"`; MCP `plaud_get_used_templates` with `search` (unique match sets `resolved_template_id`). |
 | **Create a web share like the Plaud app** | MCP `plaud_list_shareable_notes` → `plaud_create_public_share` with chosen `note_data_ids` or `template_ids` (or paste full `body` from DevTools). |
 | **Developer dashboard parity** | MCP `plaud_dev_list_files` / `plaud_dev_get_file` / `plaud_dev_get_transcript` with developer OAuth. |
 
@@ -110,6 +111,7 @@ npm install
 | `npm run login-oauth` | Run CLI `login-oauth` (browser; callback **8199**). | SSO / developer token. |
 | `npm run import-token` | Run CLI `import-token`. | Paste JWT when OAuth UI breaks. |
 | `npm run used-templates` | Run CLI `used-templates`. | Audit template usage. |
+| `npm run get-used-templates` | Run CLI `get-used-templates`. | Filter templates / resolve id (`--search`). |
 | `npm run setup-cursor` | Regenerate `.cursor/mcp.json`. | After moving the repo path. |
 
 `postinstall` runs `node scripts/write-cursor-mcp.mjs` (Cursor MCP path bootstrap).
@@ -130,6 +132,7 @@ npm install
 | 6 | **`transcript <id>`** | Prints transcript text/JSON for `id`. | Pipe to file: `… transcript abc > note.txt`. |
 | 7 | **`sync <folder>`** | Downloads **new** recordings into `folder` (incremental sync). | Local archive that stays up to date. |
 | 8 | **`used-templates`** | Scans file details, aggregates `used_template` from `content_list`. Flags: `--all`, `--trash`, `--json`. | “Which summary templates did I actually use?” |
+| 9 | **`get-used-templates`** | Same scan plus **`--search`** / **`-s`** substring on template name, id, or type; prints **`resolved_template_id`** when exactly one row matches. Flags: `--all`, `--trash`, `--json`. | Turn “Weekly recap” into a concrete `template_id` for generate/MCP. |
 
 #### `import-token` quick steps
 
@@ -139,7 +142,7 @@ npm install
 
 ---
 
-### C. MCP tools (31) — `packages/mcp/src/index.ts`
+### C. MCP tools (32) — `packages/mcp/src/index.ts`
 
 **Auth:** `plaud_oauth_*` / `plaud_dev_*` need **developer OAuth**. Most `plaud_*` need a **consumer** session (password or `import-token app` or OAuth-backed consumer—see server stderr on startup).
 
@@ -155,7 +158,7 @@ npm install
 | 6 | `plaud_dev_get_notes` | Developer API: AI `note_list` for a file. | Read Plaud-generated notes without consumer file-detail shape. |
 | 7 | `plaud_dev_get_current_user` | Developer API: current user. | Verify OAuth succeeded in MCP. |
 
-#### C.2 Consumer API (24 tools)
+#### C.2 Consumer API (25 tools)
 
 | # | Tool | Description (from server) | Example use case |
 | ---: | --- | --- | --- |
@@ -174,15 +177,16 @@ npm install
 | 20 | `plaud_download_audio_base64` | Download raw audio; returns **base64** if size ≤ **4 MiB**, else error (use `plaud_get_temp_audio_url`). | Small clip inline in an MCP response. |
 | 21 | `plaud_list_folders` | List folders / tags (`filetag`). | Build a folder picker UI in a script. |
 | 22 | `plaud_list_used_templates` | Scan all recordings (`GET /file/detail` each), list distinct `used_template` from `content_list`; `scope`: `live` / `trash` / `all`; optional `request_delay_ms` (0–2000). | Compliance report: which templates were used across the library. |
-| 23 | `plaud_rename_file` | Rename recording (`PATCH /file`). | Fix typo in meeting title. |
-| 24 | `plaud_batch_rename` | Rename many files sequentially (500 ms gap). | Normalise titles after bulk import. |
-| 25 | `plaud_move_to_folder` | Set folder/tag (replaces `filetag` list with one id). | Move all “Client A” notes into one tag. |
-| 26 | `plaud_trash_file` | Move recording to trash. | Clean-up workflow from chat. |
-| 27 | `plaud_generate` | Start AI transcript+summary job (`POST /ai/transsumm`); optional `language`, `speaker_labeling`, `llm`, `template_id`, `template_type`. | Re-run summary with a different template. |
-| 28 | `plaud_name_speakers` | Rename speaker labels in stored transcript; sync via PATCH + `/ai/update_source_info`. | Replace “Speaker 2” with real names. |
-| 29 | `plaud_upload_transcript_segments` | Write transcript as segment array (`PATCH trans_result`); `segments` is a **JSON string** of `[{ start_time, end_time, content, speaker, … }]`. | Import corrected transcript from an external editor. |
-| 30 | `plaud_list_recordings` | Compact list of all **non-trashed** recordings (`id`, title, date, duration, `has_transcript`). | Fast agent overview without heavy filters. |
-| 31 | `plaud_query_recordings` | In-memory filter: optional `title_contains`, `max_results` (≤ 500), `only_with_transcript`; newest first. | “Latest 20 notes mentioning ‘budget’ that have a transcript.” |
+| 23 | `plaud_get_used_templates` | Same scan as above plus optional **`search`** (substring on `template_name`, `template_id`, `template_type`). Response includes **`matched_templates`**, **`resolved_template_id`** / **`resolved`** when exactly one template matches. | Map a human-readable template label to `template_id` for `plaud_generate`. |
+| 24 | `plaud_rename_file` | Rename recording (`PATCH /file`). | Fix typo in meeting title. |
+| 25 | `plaud_batch_rename` | Rename many files sequentially (500 ms gap). | Normalise titles after bulk import. |
+| 26 | `plaud_move_to_folder` | Set folder/tag (replaces `filetag` list with one id). | Move all “Client A” notes into one tag. |
+| 27 | `plaud_trash_file` | Move recording to trash. | Clean-up workflow from chat. |
+| 28 | `plaud_generate` | Start AI transcript+summary job (`POST /ai/transsumm`); optional `language`, `speaker_labeling`, `llm`, `template_id`, `template_type`. | Re-run summary with a different template. |
+| 29 | `plaud_name_speakers` | Rename speaker labels in stored transcript; sync via PATCH + `/ai/update_source_info`. | Replace “Speaker 2” with real names. |
+| 30 | `plaud_upload_transcript_segments` | Write transcript as segment array (`PATCH trans_result`); `segments` is a **JSON string** of `[{ start_time, end_time, content, speaker, … }]`. | Import corrected transcript from an external editor. |
+| 31 | `plaud_list_recordings` | Compact list of all **non-trashed** recordings (`id`, title, date, duration, `has_transcript`). | Fast agent overview without heavy filters. |
+| 32 | `plaud_query_recordings` | In-memory filter: optional `title_contains`, `max_results` (≤ 500), `only_with_transcript`; newest first. | “Latest 20 notes mentioning ‘budget’ that have a transcript.” |
 
 **Source of truth for defaults and optional fields:** Zod `inputSchema` next to each `registerTool` in **`packages/mcp/src/index.ts`**.
 

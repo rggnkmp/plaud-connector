@@ -463,6 +463,33 @@ async function main() {
   );
 
   server.registerTool(
+    'plaud_get_used_templates',
+    {
+      description:
+        'Full scan of used KI templates (same as plaud_list_used_templates) plus optional `search` to filter by template name, id, or type. When exactly one row matches, `resolved_template_id` is set for use in plaud_generate / template_id.',
+      inputSchema: z.object({
+        scope: z.enum(['live', 'trash', 'all']).optional().default('live'),
+        request_delay_ms: z.number().int().nonnegative().max(2000).optional().default(0),
+        search: z
+          .string()
+          .optional()
+          .describe('Case-insensitive substring: matches template_name, template_id, template_type'),
+      }),
+    },
+    async (p) => {
+      const gate = await assertConsumerSession();
+      if (gate) return gate;
+      return textJson(
+        await client.getUsedTemplates({
+          scope: p.scope,
+          requestDelayMs: p.request_delay_ms,
+          search: p.search,
+        }),
+      );
+    },
+  );
+
+  server.registerTool(
     'plaud_rename_file',
     { description: 'Rename a recording (PATCH /file).', inputSchema: z.object({ file_id: z.string(), new_name: z.string() }) },
     async (p) => {

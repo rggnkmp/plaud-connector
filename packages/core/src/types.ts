@@ -77,6 +77,18 @@ export interface PlaudListUsedTemplatesResult {
   templates: PlaudUsedTemplateRow[];
 }
 
+/** Same scan as {@link PlaudListUsedTemplatesResult} plus optional name/id search for resolving `template_id`. */
+export interface PlaudGetUsedTemplatesResult extends PlaudListUsedTemplatesResult {
+  /** Normalised filter string, or `null` if none was requested */
+  search: string | null;
+  /** Rows matching `search` (case-insensitive substring on `template_name`, `template_id`, `template_type`). If `search` is absent, matches all aggregated rows (= `templates`). */
+  matched_templates: PlaudUsedTemplateRow[];
+  /** When `search` matches exactly one row — use this id in `plaud_generate` / MCP `template_id`. */
+  resolved_template_id: string | null;
+  /** Full row when uniquely resolved; otherwise `null`. */
+  resolved: PlaudUsedTemplateRow | null;
+}
+
 /** Items that go into `content_config.notes` for `POST /share/public/create` (KIsummaries/notes, not raw transcript S3). */
 export interface PlaudShareableNoteItem {
   data_id: string;
