@@ -258,10 +258,10 @@ npm test
 
 **This repo:** [rggnkmp/plaud-connector](https://github.com/rggnkmp/plaud-connector) (maintainer **[@rggnkmp](https://github.com/rggnkmp)**).
 
-### Related GitHub repository (feature influence)
+### Related repositories (inspiration / lineage)
 
 | Repository | How it relates |
 | --- | --- |
-| **[sergivalverde/plaud](https://github.com/sergivalverde/plaud)** | **Upstream / prior art.** This monorepo (`@plaud/core`, CLI, MCP layout, consumer API usage, and many behaviours) **builds on and extends** that project. Features and structure here were **informed by** [sergivalverde/plaud](https://github.com/sergivalverde/plaud); when comparing behaviour or filing upstream-appropriate changes, treat it as the **source repository** that influenced this fork. |
-
-**Other product (not a GitHub dependency):** Plaud’s official npm package [`@plaud-ai/mcp`](https://www.npmjs.com/package/@plaud-ai/mcp) informed **developer OAuth** and **`tokens-mcp.json`** compatibility for `plaud_dev_*` tools; it is not vendored as source in this repo.
+| **[sergivalverde/plaud](https://github.com/sergivalverde/plaud)** | **Upstream / fork parent (prior art).** Monorepo layout, consumer API usage, CLI/MCP shape; this project **forks and extends** that line. |
+| **[audiobridge-ai/mcp-servers](https://github.com/audiobridge-ai/mcp-servers)** | **MCP ecosystem reference.** Collection of MCP servers and integration patterns; informed some **MCP wiring, tooling, and host-integration** decisions here (no code copied as a submodule). |
+| **[npm: @plaud-ai/mcp](https://www.npmjs.com/package/@plaud-ai/mcp)** | **Plaud official MCP (npm).** **Developer OAuth** and **`tokens-mcp.json`** layout compatibility for `plaud_dev_*`; separate product, not vendored source. |
